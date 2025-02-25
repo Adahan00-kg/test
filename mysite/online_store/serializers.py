@@ -1,15 +1,10 @@
-from calendar import month
-
-from django.core.serializers import serialize
-from django.db.models import DateField
-from django.contrib.auth.models import User
 from rest_framework import serializers
 from .models import *
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = ['username', 'email', 'password','first_name', 'last_name', 'age',
@@ -56,7 +51,7 @@ class LoginSerializer(serializers.Serializer):
 
 
 
-class UserProfileSerializer(serializers.ModelSerializer):
+class UserProfileListSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = ['first_name','last_name']
@@ -131,4 +126,4 @@ class CartSerializer(serializers.ModelSerializer):
 
 
     def get_total_price(self,obj):
-        return obj.get_total_price
+        return obj.get_total_price()

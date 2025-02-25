@@ -2,7 +2,7 @@ from rest_framework import viewsets,permissions,status,generics
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 
-from .permissions import CheckOwner
+from .permissions import CheckOwner ,CheckUser,Check
 from .serializers import *
 from .models import *
 from .filters import ProductFilter
@@ -13,7 +13,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 
 class RegisterView(generics.CreateAPIView):
-    serializer_class = UserSerializer
+    serializer_class = UserProfileSerializer
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -46,6 +46,7 @@ class LogoutView(generics.GenericAPIView):
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+
 class UserProfileViewSet(viewsets.ModelViewSet):
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
@@ -56,6 +57,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
 
 
+from drf_yasg.utils import swagger_auto_schema
 
 class ProductListViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
@@ -66,15 +68,18 @@ class ProductListViewSet(viewsets.ModelViewSet):
     ordering_fields = ['price','active','date']
     permission_classes = [permissions.IsAuthenticatedOrReadOnly,CheckOwner]
 
-
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+    @swagger_auto_schema(operation_description="по этому запросу можно создавать новый продукт", responses={404: 'slug not found'})
+    def create(self,*args,**kwargs):
+        return super().create(*args,**kwargs)
 
 
 class ProductDetailViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductDetailSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, CheckOwner]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, CheckOwner,CheckUser,Check]
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -105,12 +110,13 @@ class CartViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(cart)
         return Response(serializer.data)
 
+
 class CartItemViewSet(viewsets.ModelViewSet):
     serializer_class = CartItemSerializer
 
     def get_queryset(self):
         return CarItem.objects.filter(cart__user=self.request.user)
 
-    def perform_create(self, serializer):
-        cart, created = Cart.objects.get_or_create(user=self.request.user)
-        serializer.save(cart=cart)
+        def perform_create(self, serializer):
+            cart, created = Cart.objects.get_or_create(user=self.request.user)
+            serializer.save(cart=cart)

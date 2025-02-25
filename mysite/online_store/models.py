@@ -1,16 +1,15 @@
-
 from django.contrib.auth.models import AbstractUser
 
 from django.db import models
 
-from django.core.validators import MaxLengthValidator,MinValueValidator
+from django.core.validators import MaxValueValidator,MinValueValidator
 from phonenumber_field.modelfields import PhoneNumberField
 
 class UserProfile(AbstractUser):
 
     age = models.PositiveSmallIntegerField(null=True,blank=True,
                                            validators=[MinValueValidator(15),
-                                                       MaxLengthValidator(110)])
+                                                       MaxValueValidator(110)])
     country = models.CharField(max_length=32,null=True,blank=True)
     phono_number = PhoneNumberField(null=True,blank=True,region='KG')
     date_register = models.DateField(auto_now_add=True,null=True,blank=True)
@@ -18,7 +17,7 @@ class UserProfile(AbstractUser):
         ('gold','Gold'),
         ('silver','Silver'),
         ('bronze','Bronze'),
-        ('simple','Simple')
+        ('simple','Simple'),
     )
 
     status = models.CharField(max_length=10,choices=STATUS_CHOiCES,default='simple')
@@ -59,8 +58,8 @@ class ProductPhoto(models.Model):
 
 class Rating(models.Model):
     product = models.ForeignKey(Product,on_delete=models.CASCADE,related_name='ratings')
+    stars = models.PositiveSmallIntegerField(choices=[(i ,str(i)) for i in range(11)],verbose_name='Рейтинг',null=True,blank=True)
     user  = models.ForeignKey(UserProfile,on_delete=models.CASCADE)
-    stars = models.PositiveSmallIntegerField(choices=[(i,str(i)) for i in range(6)],verbose_name='Рейтинг')
 
 
     def __str__(self):
@@ -107,3 +106,5 @@ class CarItem(models.Model):
     def get_total_price(self):
         return self.product.price * self.quantity
 
+class name(models.Model):
+    name = models.CharField(max_lenght=10)
